@@ -1,0 +1,438 @@
+#!/bin/bash
+
+
+# Run this file after an initial update and reboot
+
+
+current_directory=`pwd`
+home=/home/$USER
+# install brave
+sudo apt install -y apt-transport-https curl gnupg
+curl -s https://brave-browser-apt-release.s3.brave.com/brave-core.asc | sudo apt-key --keyring /etc/apt/trusted.gpg.d/brave-browser-release.gpg add -
+echo "deb [arch=amd64] https://brave-browser-apt-release.s3.brave.com/ stable main" | sudo tee /etc/apt/sources.list.d/brave-browser-release.list
+sudo apt update
+sudo apt install -y brave-browser
+
+sudo apt remove -y firefox-esr thunderbird firefox chromium
+
+# install atom
+wget -qO - https://packagecloud.io/AtomEditor/atom/gpgkey | sudo apt-key add -
+sudo sh -c 'echo "deb [arch=amd64] https://packagecloud.io/AtomEditor/atom/any/ any main" > /etc/apt/sources.list.d/atom.list'
+sudo apt update
+sudo apt install -y atom
+
+# install pycharm
+echo **********INSTALLING REQUIREMENTS**********
+sudo apt install -y at python3-pip
+python3 -m pip install -U pip
+python3 -m pip install requests bs4 astral
+pc_ver=`python3 - << EOF
+import requests
+from bs4 import BeautifulSoup
+
+
+url = "https://www.jetbrains.com/pycharm/whatsnew/"
+page = requests.get(url).text
+soup = BeautifulSoup(page, "html.parser")
+title = soup.find("title")
+print(title.text.replace("What’s New in PyCharm ", ""))
+
+EOF`
+wget https://download.jetbrains.com/python/pycharm-professional-$pc_ver.tar.gz -P $home/Softwares/
+mkdir $home/Softwares/pycharm-professional/
+tar xvf $home/Softwares/pycharm-professional-$pc_ver.tar.gz -C $home/Softwares/pycharm-professional --strip-components=1
+rm $home/Softwares/pycharm-professional-$pc_ver.tar.gz
+
+# set startup apps
+cat << WRITE_BRAVE > $home/.config/autostart/brave.desktop
+[Desktop Entry]
+Type=Application
+Name="Brave Browser"
+Exec=brave-browser
+X-GNOME-Autostart-enabled=true
+WRITE_BRAVE
+
+cat << WRITE_PYCHARM > $home/.config/autostart/pycharm.desktop
+[Desktop Entry]
+Type=Application
+Name="PyCharm Professional"
+Exec=charm
+X-GNOME-Autostart-enabled=true
+WRITE_PYCHARM
+
+# customization
+os_name=`cat /etc/os-release | grep -oP "(?<=^ID=).*"`
+if [ ${os_name} = ubuntu ]
+then
+  echo FIRST CONDITION
+  # install git
+  sudo add-apt-repository ppa:git-core/ppa -y
+  sudo apt update
+  sudo apt install -y git
+
+  # install anydesk
+  wget -qO - https://keys.anydesk.com/repos/DEB-GPG-KEY | apt-key add -
+  echo "deb http://deb.anydesk.com/ all main" > /etc/apt/sources.list.d/anydesk-stable.list
+  sudo apt update
+  sudo apt install -y anydesk
+
+  # install telegram
+  tel_ver=`python3 - << EOF
+import requests
+from bs4 import BeautifulSoup
+
+
+url = "https://github.com/telegramdesktop/tdesktop"
+page = requests.get(url).content
+soup = BeautifulSoup(page, "html.parser")
+links = soup.find_all("a")
+for lk in links:
+    if "tdesktop/releases/tag/v" in lk.get("href"):
+        print(lk.get("href").split("/v")[1])
+        break
+
+EOF`
+  wget https://updates.tdesktop.com/tlinux/tsetup.$tel_ver.tar.xz -P $home/Softwares/
+  tar xvf $home/Softwares/tsetup.$tel_ver.tar.xz -C $home/Softwares/
+  rm $home/Softwares/tsetup.$tel_ver.tar.xz
+  
+  # Add Terminal to startup apps
+  cat << WRITE_TERMINAL > $home/.config/autostart/terminal.desktop
+[Desktop Entry]
+Type=Application
+Name="Terminal"
+Exec=gnome-terminal
+X-GNOME-Autostart-enabled=true
+WRITE_TERMINAL
+  
+elif [ ${os_name} = pureos ]
+then
+  echo SECOND CONDITION
+  # install git
+  git_ver=`python3 - << EOF
+import requests
+from bs4 import BeautifulSoup
+
+
+url = "https://git-scm.com/download/linux"
+page = requests.get(url).text
+soup = BeautifulSoup(page, "html.parser")
+paragraphs = soup.find_all("p")
+for p in paragraphs:
+    if "The latest version is" in p.text:
+        for link in p.find_all("a"):
+            if "tar.gz" in link.get("href"):
+                print(link.text)
+                break
+        break
+
+EOF`
+  wget https://www.kernel.org/pub/software/scm/git/git-$git_ver.tar.gz -P $home/Downloads/
+  sudo apt install -y git libz-dev libssl-dev dh-autoreconf libcurl4-gnutls-dev
+  tar xvf $home/Downloads/git-$git_ver.tar.gz -C $home/Downloads/
+  cd $home/Downloads/git-$git_ver/
+  make configure
+  ./configure --prefix=/usr
+  make all doc info
+  sudo make install
+  cd $home
+  git clone git://git.kernel.org/pub/scm/git/git.git $home/Softwares/git
+  rm -rf $home/Downloads/git-$git_ver/
+  rm $home/Downloads/git-$git_ver.tar.gz
+  cd $current_directory
+  git --version
+  
+  # Add Terminal to startup apps
+  cat << WRITE_TERMINAL > $home/.config/autostart/terminal.desktop
+[Desktop Entry]
+Type=Application
+Name="Terminal"
+Exec=tilix
+X-GNOME-Autostart-enabled=true
+WRITE_TERMINAL
+fi
+
+# update
+sudo sh -c 'cat << \WRITE_UPDATE > /usr/local/bin/update
+#!/bin/bash
+
+
+sudo apt update
+sudo apt full-upgrade -y
+sudo apt upgrade -y
+sudo apt autoremove -y
+
+current_directory=`pwd`
+
+echo **********GETTING LATEST VERSION NO.**********
+ver=`python3 - << GET_PYTHON_VERSION
+import os
+import sys
+import subprocess
+import requests
+from bs4 import BeautifulSoup
+
+
+def system_version():
+    default_directory = "/usr/bin/"
+    directory = "/usr/local/bin/"
+    versions = []
+    for file in os.listdir(default_directory):
+        if file.startswith("python") and "-" not in file and file != "python" and file[-1].isdigit():
+            versions.append(float(file.replace("python", "0")))
+    for file in os.listdir(directory):
+        if file.startswith("python") and "-" not in file and file != "python" and file[-1].isdigit():
+            versions.append(float(file.replace("python", "0")))
+    if versions:
+        result = max(float(sys.version[:3]), max(versions))
+    else:
+        result = float(sys.version[:3])
+    return subprocess.getoutput(f"python{result} -V").replace("Python ", "")
+
+
+def latest_version():
+    page = requests.get("https://www.python.org").content
+    soup = BeautifulSoup(page, "html.parser")
+    paragraphs = soup.find_all("p")
+    for p in paragraphs:
+        if "Latest: " in p:
+            return p.find("a").text.replace("Python ", "")
+
+
+if __name__ == "__main__":
+    current = system_version()
+    latest = latest_version()
+    if current == latest:
+        print(0)
+    elif current < latest:
+        print(latest)
+
+GET_PYTHON_VERSION`
+
+if [ ${ver} = 0 ]
+then
+  echo Already up-to-date
+else
+  sudo apt install -y make build-essential libssl-dev zlib1g-dev libbz2-dev \
+  libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev \
+  libncursesw5-dev xz-utils tk-dev liblzma-dev
+
+  echo **********DOWNLOADING**********
+  wget https://www.python.org/ftp/python/$ver/Python-$ver.tar.xz -P /home/$USER/Downloads/
+
+  echo **********EXTRACTING**********
+  tar xvf /home/$USER/Downloads/Python-$ver.tar.xz -C /home/$USER/Downloads/
+
+  echo **********CONFIGURE**********
+  cd /home/$USER/Downloads/Python-$ver/
+  ./configure --enable-optimizations --with-ensurepip=install
+
+  echo **********MAKE**********
+  make -j 8
+
+  echo **********ALTINSTALL**********
+  sudo make altinstall
+
+  # echo **********TEST**********
+  ver_mm=${ver::3}
+  # python$ver_mm -m test
+
+  echo **********UPGRADING PIP**********
+  python$ver_mm -m pip install -U pip
+
+  echo **********CREATE VIRTUAL ENVIRONMENT**********
+  python$ver_mm -m venv /home/$USER/qenv/${ver//.}
+  echo **********REMOVING DOWNLOADED FILES**********
+  cd $current_directory
+  rm /home/$USER/Downloads/Python-$ver.tar.xz
+  sudo rm -rf /home/$USER/Downloads/Python-$ver/
+
+  python$ver_mm -V
+fi
+
+exit
+$SHELL
+
+WRITE_UPDATE'
+
+sudo chmod +x /usr/local/bin/update
+update
+
+
+# cb as clipboard
+sudo apt install xclip -y
+cat << WRITE_ALIASES >> $home/.bash_aliases
+alias cb="xclip -selection c"
+
+WRITE_ALIASES
+chmod +x $home/.bash_aliases
+source $home/.bashrc	# update bashrc
+
+
+# Set Auto-Dark
+sudo sh -c 'cat << \WRITE_AUTO_DARK > /usr/local/bin/auto-dark
+#!/bin/bash
+
+
+python3 - << \CHANGE_THEME
+import subprocess
+from astral import LocationInfo
+from astral.sun import sun
+import datetime
+
+
+def sunrise_sunset():
+    city = LocationInfo("Cambridge", "England", "Europe/London",
+                        52.212754, 0.136735)
+    s = sun(city.observer, date=datetime.date.today())
+    sunrise_time = s["sunrise"].time().strftime("%H:%M")
+    sunset_time = s["sunset"].time().strftime("%H:%M")
+    return sunrise_time, sunset_time
+
+
+os_name = subprocess.getoutput("cat /etc/os-release | grep -oP \"(?<=^ID=).*\"")
+now = datetime.datetime.now().time().strftime("%H:%M")
+sunrise, sunset = sunrise_sunset()
+now_theme = "gsettings set org.gnome.desktop.interface gtk-theme "
+remove_at_jobs = "atrm $(atq | cut -f1)"
+day_theme = ""
+night_theme = ""
+if os_name == "ubuntu":
+    day_theme += now_theme + "Yaru"
+    night_theme += now_theme + "Yaru-dark"
+    if sunrise <= now < sunset:
+        now_theme += "Yaru"
+    else:
+        now_theme += "Yaru-dark"
+elif os_name == "pureos":
+    day_theme += now_theme + "Adwaita"
+    night_theme += now_theme + "Adwaita-dark"
+    if sunrise <= now < sunset:
+        now_theme += "Adwaita"
+    else:
+        now_theme += "Adwaita-dark"
+
+schedule_day = f"echo \"{day_theme}\" | at -m {sunrise}"
+schedule_night = f"echo \"{night_theme}\" | at -m {sunset}"
+
+subprocess.call(["/bin/bash", "-c", now_theme])
+subprocess.call(["/bin/bash", "-c", remove_at_jobs])
+subprocess.call(["/bin/bash", "-c", schedule_day])
+subprocess.call(["/bin/bash", "-c", schedule_night])
+
+CHANGE_THEME
+WRITE_AUTO_DARK'
+
+sudo chmod +x /usr/local/bin/auto-dark
+
+# Add Shortcuts
+cat << WRITE_SHORTCUTS > shortcuts.py
+#!/usr/bin/env python3
+import subprocess
+from pathlib import Path
+
+
+def modify_default_shortcuts(os_):
+    main = "gsettings set org.gnome.settings-daemon.plugins.media-keys"
+    bindings = {"home": "<Primary><Alt>e", "www": "<Primary><Alt>b"}
+    for key, value in bindings.items():
+        command = f"{main} {key} "
+        if os_ == "ubuntu":
+            command += f"\"['{value}']\""
+        elif os_ == "pureos":
+            command += f"'{value}'"
+        subprocess.call(["/bin/bash", "-c", command])
+
+
+def add_custom_shortcut(os_, **shortcuts):
+    key = "org.gnome.settings-daemon.plugins.media-keys custom-keybindings"
+    sub_key = f"{key.replace(' ', '.')[:-1]}:"
+    item_s = f"/{key.replace(' ', '/').replace('.', '/')}/"
+    # get the current list of custom shortcuts
+    array_str = subprocess.getoutput(f"gsettings get {key}")
+    # in case the array was empty, remove the annotation hints
+    command_result = array_str.lstrip("@as")
+    current_shortcuts = eval(command_result)
+    # make sure the additional keybinding mention is no duplicate
+    n = 0
+    while True:
+        new = f"{item_s}custom{str(n)}/"
+        if new not in current_shortcuts:
+            break
+        n += 1
+    # add the new keybinding to the list
+    current_shortcuts.append(new)
+    # create the shortcut, set the name, command and shortcut key
+    name = shortcuts["name"]
+    command = shortcuts["command"]
+    binding = shortcuts["binding"]
+    final_commands = [""] * 4
+    final_commands[0] = f"gsettings set {key} \"{str(current_shortcuts)}\""
+    final_commands[1] = f"gsettings set {sub_key}{new} name '{name}'"
+    final_commands[2] = f"gsettings set {sub_key}{new} command '{command}'"
+    final_commands[3] = f"gsettings set {sub_key}{new} binding '{binding}'"
+    for cmd in final_commands:
+        subprocess.call(["/bin/bash", "-c", cmd])
+
+
+os_name = subprocess.getoutput("cat /etc/os-release | grep -oP '(?<=^ID=).*'")
+
+modify_default_shortcuts(os_name)
+add_custom_shortcut(os_name,
+                    name="Auto Dark",
+                    command="auto-dark",
+                    binding="<Primary><Alt>a")
+add_custom_shortcut(os_name,
+                    name="Open PyCharm",
+                    command="charm",
+                    binding="<Primary><Alt>p")
+
+home = str(Path.home())
+values = []
+
+if os_name == "ubuntu":
+    values = [{"name": "Terminal Dark",
+               "command": "gnome-terminal --window-with-profile=Dark",
+               "binding": "<Primary><Alt>y"},
+              {"name": "Light Theme",
+               "command": "gsettings set org.gnome.desktop.interface "
+                          "gtk-theme Yaru",
+               "binding": "<Primary><Alt>1"},
+              {"name": "Dark Theme",
+               "command": "gsettings set org.gnome.desktop.interface "
+                          "gtk-theme Yaru-dark",
+               "binding": "<Primary><Alt>2"},
+              {"name": "Open Telegram",
+               "command": f"{home}/Softwares/Telegram/Telegram",
+               "binding": "<Primary><Alt>j"}]
+
+elif os_name == "pureos":
+    values = [{"name": "Open Terminal",
+               "command": "tilix",
+               "binding": "<Primary><Alt>t"},
+              {"name": "Light Theme",
+               "command": "gsettings set org.gnome.desktop.interface "
+                          "gtk-theme 'Adwaita'",
+               "binding": "<Primary><Alt>1"},
+              {"name": "Dark Theme",
+               "command": "gsettings set org.gnome.desktop.interface "
+                          "gtk-theme 'Adwaita-dark'",
+               "binding": "<Primary><Alt>2"}]
+
+for keyword_arguments in values:
+    add_custom_shortcut(os_name, **keyword_arguments)
+
+WRITE_SHORTCUTS
+
+chmod +x shortcuts.py
+./shortcuts.py
+rm shortcuts.py
+
+
+# change ownership if needed
+sudo chown -R $USER qenv/ Softwares/
+
+
+echo All Done!
+exit
+$SHELL
