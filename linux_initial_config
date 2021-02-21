@@ -1,7 +1,8 @@
 #!/bin/bash
 
 
-# Run this file after an initial update and reboot
+# Before running this file, please make sure to run an update and reboot.
+# To run this file, open Terminal/Tilix and run "chmod +x linux_initial_config" and then "./linux_initial_config"
 
 
 current_directory=`pwd`
