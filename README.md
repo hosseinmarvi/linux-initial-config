@@ -25,3 +25,5 @@ Terminal, Brave Browser, and PyCharm will be added to startup applications.
 The command "auto-dark" sets the theme to Light/Dark according to time, and schedules one further change of theme at the next sunset/sunrise.
 
 Various keyboard shortcuts will be added for different commands.
+
+NOTE: The OS must have a version of Python3 installed.
