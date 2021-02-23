@@ -16,7 +16,7 @@ The command "update" will be assigned as the combinations of the following comma
 - sudo apt upgrade -y
 - sudo apt autoremove -y
 
-This command will also check for the latest version of Python. If there's a new version, it'll install it as an alternative version, and creates a venv from it.
+This command will also check for the latest version of Python. If there's a new version, it'll install it as an alternative version, and creates a venv from it in ~/qenv/.
 
 The command "cb" can be used as an alias of "xclip -selection c". Example: "cat <file_name> | cb" will copy the contents of the file_name to the clipboard.
 
