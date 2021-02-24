@@ -6,7 +6,6 @@
 
 
 current_directory=`pwd`
-home=/home/$USER
 # install brave
 sudo apt install -y apt-transport-https curl gnupg
 curl -s https://brave-browser-apt-release.s3.brave.com/brave-core.asc | sudo apt-key --keyring /etc/apt/trusted.gpg.d/brave-browser-release.gpg add -
@@ -39,13 +38,13 @@ title = soup.find("title")
 print(title.text.replace("What’s New in PyCharm ", ""))
 
 EOF`
-wget https://download.jetbrains.com/python/pycharm-professional-$pc_ver.tar.gz -P $home/Softwares/
-mkdir $home/Softwares/pycharm-professional/
-tar xvf $home/Softwares/pycharm-professional-$pc_ver.tar.gz -C $home/Softwares/pycharm-professional --strip-components=1
-rm $home/Softwares/pycharm-professional-$pc_ver.tar.gz
+wget https://download.jetbrains.com/python/pycharm-professional-$pc_ver.tar.gz -P $HOME/Softwares/
+mkdir $HOME/Softwares/pycharm-professional/
+tar xvf $HOME/Softwares/pycharm-professional-$pc_ver.tar.gz -C $HOME/Softwares/pycharm-professional --strip-components=1
+rm $HOME/Softwares/pycharm-professional-$pc_ver.tar.gz
 
 # set startup apps
-cat << WRITE_BRAVE > $home/.config/autostart/brave.desktop
+cat << WRITE_BRAVE > $HOME/.config/autostart/brave.desktop
 [Desktop Entry]
 Type=Application
 Name="Brave Browser"
@@ -53,7 +52,7 @@ Exec=brave-browser
 X-GNOME-Autostart-enabled=true
 WRITE_BRAVE
 
-cat << WRITE_PYCHARM > $home/.config/autostart/pycharm.desktop
+cat << WRITE_PYCHARM > $HOME/.config/autostart/pycharm.desktop
 [Desktop Entry]
 Type=Application
 Name="PyCharm Professional"
@@ -93,12 +92,12 @@ for lk in links:
         break
 
 EOF`
-  wget https://updates.tdesktop.com/tlinux/tsetup.$tel_ver.tar.xz -P $home/Softwares/
-  tar xvf $home/Softwares/tsetup.$tel_ver.tar.xz -C $home/Softwares/
-  rm $home/Softwares/tsetup.$tel_ver.tar.xz
+  wget https://updates.tdesktop.com/tlinux/tsetup.$tel_ver.tar.xz -P $HOME/Softwares/
+  tar xvf $HOME/Softwares/tsetup.$tel_ver.tar.xz -C $HOME/Softwares/
+  rm $HOME/Softwares/tsetup.$tel_ver.tar.xz
   
   # Add Terminal to startup apps
-  cat << WRITE_TERMINAL > $home/.config/autostart/terminal.desktop
+  cat << WRITE_TERMINAL > $HOME/.config/autostart/terminal.desktop
 [Desktop Entry]
 Type=Application
 Name="Terminal"
@@ -128,23 +127,23 @@ for p in paragraphs:
         break
 
 EOF`
-  wget https://www.kernel.org/pub/software/scm/git/git-$git_ver.tar.gz -P $home/Downloads/
+  wget https://www.kernel.org/pub/software/scm/git/git-$git_ver.tar.gz -P $HOME/Downloads/
   sudo apt install -y git libz-dev libssl-dev dh-autoreconf libcurl4-gnutls-dev
-  tar xvf $home/Downloads/git-$git_ver.tar.gz -C $home/Downloads/
-  cd $home/Downloads/git-$git_ver/
+  tar xvf $HOME/Downloads/git-$git_ver.tar.gz -C $HOME/Downloads/
+  cd $HOME/Downloads/git-$git_ver/
   make configure
   ./configure --prefix=/usr
   make all doc info
   sudo make install
-  cd $home
-  git clone git://git.kernel.org/pub/scm/git/git.git $home/Softwares/git
-  rm -rf $home/Downloads/git-$git_ver/
-  rm $home/Downloads/git-$git_ver.tar.gz
+  cd $HOME
+  git clone git://git.kernel.org/pub/scm/git/git.git $HOME/Softwares/git
+  rm -rf $HOME/Downloads/git-$git_ver/
+  rm $HOME/Downloads/git-$git_ver.tar.gz
   cd $current_directory
   git --version
   
   # Add Terminal to startup apps
-  cat << WRITE_TERMINAL > $home/.config/autostart/terminal.desktop
+  cat << WRITE_TERMINAL > $HOME/.config/autostart/terminal.desktop
 [Desktop Entry]
 Type=Application
 Name="Terminal"
@@ -262,12 +261,12 @@ update
 
 # cb as clipboard
 sudo apt install xclip -y
-cat << WRITE_ALIASES >> $home/.bash_aliases
+cat << WRITE_ALIASES >> $HOME/.bash_aliases
 alias cb="xclip -selection c"
 
 WRITE_ALIASES
-chmod +x $home/.bash_aliases
-source $home/.bashrc	# update bashrc
+chmod +x $HOME/.bash_aliases
+source $HOME/.bashrc	# update bashrc
 
 
 # Set Auto-Dark
