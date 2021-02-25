@@ -13,6 +13,7 @@ echo "deb [arch=amd64] https://brave-browser-apt-release.s3.brave.com/ stable ma
 sudo apt update
 sudo apt install -y brave-browser
 
+# remove other browsers
 sudo apt remove -y firefox-esr thunderbird firefox chromium
 
 # install atom
@@ -42,6 +43,9 @@ wget https://download.jetbrains.com/python/pycharm-professional-$pc_ver.tar.gz -
 mkdir $HOME/Softwares/pycharm-professional/
 tar xvf $HOME/Softwares/pycharm-professional-$pc_ver.tar.gz -C $HOME/Softwares/pycharm-professional --strip-components=1
 rm $HOME/Softwares/pycharm-professional-$pc_ver.tar.gz
+
+# install tools
+sudo apt install -y tree xclip
 
 # set startup apps
 cat << WRITE_BRAVE > $HOME/.config/autostart/brave.desktop
@@ -260,7 +264,6 @@ update
 
 
 # cb as clipboard
-sudo apt install xclip -y
 cat << WRITE_ALIASES >> $HOME/.bash_aliases
 alias cb="xclip -selection c"
 
