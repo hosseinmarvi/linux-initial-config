@@ -6,9 +6,12 @@ The following softwares will be downloaded and installed (along with the require
 - Atom
 - PyCharm Professional
 - Git
+- tree
 - xclip
 - Anydesk (On Ubuntu)
 - Telegram Desktop (On Ubuntu)
+
+Other browsers will be removed.
 
 The command "update" will be assigned as the combinations of the following commands:
 - sudo apt update
