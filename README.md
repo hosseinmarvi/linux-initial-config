@@ -29,4 +29,4 @@ The command "auto-dark" sets the theme to Light/Dark according to time, and sche
 
 Various keyboard shortcuts will be added for different commands.
 
-* NOTE: The OS must have a version of Python3 installed.
+*NOTE: The OS must have a version of Python3 installed.*
