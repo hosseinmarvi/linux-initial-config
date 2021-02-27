@@ -6,6 +6,7 @@ The following softwares will be downloaded and installed (along with the require
 - Atom
 - PyCharm Professional
 - Git
+- ssh
 - tree
 - xclip
 - Anydesk (On Ubuntu)
