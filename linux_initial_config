@@ -45,7 +45,7 @@ tar xvf $HOME/Softwares/pycharm-professional-$pc_ver.tar.gz -C $HOME/Softwares/p
 rm $HOME/Softwares/pycharm-professional-$pc_ver.tar.gz
 
 # install tools
-sudo apt install -y tree xclip
+sudo apt install -y ssh tree xclip
 
 # set startup apps
 cat << WRITE_BRAVE > $HOME/.config/autostart/brave.desktop
