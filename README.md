@@ -30,4 +30,6 @@ The command "auto-dark" sets the theme to Light/Dark according to time, and sche
 
 Various keyboard shortcuts will be added for different commands.
 
+An SSH key (id_ed25519) will be created in ~/.ssh/ (without a password) and the contents of its public key will be copied to the clipboard.
+
 *NOTE: The OS must have a version of Python3 installed.*
