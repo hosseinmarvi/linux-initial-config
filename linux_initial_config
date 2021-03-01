@@ -4,8 +4,9 @@
 # Before running this file, please make sure to run an update and reboot.
 # To run this file, open Terminal/Tilix and run "chmod +x linux_initial_config" and then "./linux_initial_config"
 
-
 current_directory=`pwd`
+read -p "Please enter your email [Optional]: " user_email
+
 # install brave
 sudo apt install -y apt-transport-https curl gnupg
 curl -s https://brave-browser-apt-release.s3.brave.com/brave-core.asc | sudo apt-key --keyring /etc/apt/trusted.gpg.d/brave-browser-release.gpg add -
@@ -435,7 +436,16 @@ rm shortcuts.py
 # change ownership if needed
 sudo chown -R $USER qenv/ Softwares/
 
+# add ssh key
+mkdir -p $HOME/.ssh/
+touch $HOME/.ssh/authorized_keys
+ssh-keygen -t ed25519 -C $user_email -f $HOME/.ssh/id_ed25519 -N ""
+eval `ssh-agent`
+ssh-add $HOME/.ssh/id_ed25519
+cat $HOME/.ssh/id_ed25519.pub | xclip -selection c
 
 echo All Done!
+echo The contents of the public key copied to the clipboard
+
 exit
 $SHELL
