@@ -445,7 +445,11 @@ ssh-add $HOME/.ssh/id_ed25519
 cat $HOME/.ssh/id_ed25519.pub | xclip -selection c
 
 echo All Done!
-echo The contents of the public key copied to the clipboard
+echo "The contents of the public key copied to the clipboard"
+echo "You can paste it to your GitHub account settings which will be opened for you"
+
+# open github settings to paste the public key contents
+brave-browser https://github.com/settings/ssh/new
 
 exit
 $SHELL
