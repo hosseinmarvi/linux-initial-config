@@ -84,14 +84,14 @@ EOF`
   tar xvf $HOME/Softwares/tsetup.$tel_ver.tar.xz -C $HOME/Softwares/
   rm $HOME/Softwares/tsetup.$tel_ver.tar.xz
   
-  # Add Terminal to startup apps
-  cat << WRITE_TERMINAL > $HOME/.config/autostart/terminal.desktop
+  # Add Update to startup apps
+  cat << WRITE_UPDATE_AUTOSTART > $HOME/.config/autostart/update.desktop
 [Desktop Entry]
 Type=Application
-Name="Terminal"
-Exec=gnome-terminal
+Name="Update"
+Exec=gnome-terminal -e "update"
 X-GNOME-Autostart-enabled=true
-WRITE_TERMINAL
+WRITE_UPDATE_AUTOSTART
   
 elif [ ${os_name} = pureos ]
 then
@@ -130,14 +130,14 @@ EOF`
   cd $current_directory
   git --version
   
-  # Add Terminal to startup apps
-  cat << WRITE_TERMINAL > $HOME/.config/autostart/terminal.desktop
+  # Add Update to startup apps
+  cat << WRITE_UPDATE_AUTOSTART > $HOME/.config/autostart/update.desktop
 [Desktop Entry]
 Type=Application
-Name="Terminal"
-Exec=tilix
+Name="Update"
+Exec=tilix -e "update"
 X-GNOME-Autostart-enabled=true
-WRITE_TERMINAL
+WRITE_UPDATE_AUTOSTART
 fi
 
 # update
