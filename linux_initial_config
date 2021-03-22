@@ -33,11 +33,11 @@ import requests
 from bs4 import BeautifulSoup
 
 
-url = "https://www.jetbrains.com/pycharm/whatsnew/"
+url = "https://blog.jetbrains.com/pycharm/category/releases/"
 page = requests.get(url).text
 soup = BeautifulSoup(page, "html.parser")
-title = soup.find("title")
-print(title.text.replace("What’s New in PyCharm ", ""))
+title = soup.find("div", {"class": "col"})
+print(title.h3.text.replace("PyCharm ", "").split()[0])
 
 EOF`
 wget https://download.jetbrains.com/python/pycharm-professional-$pc_ver.tar.gz -P $HOME/Softwares/
@@ -73,11 +73,8 @@ from bs4 import BeautifulSoup
 url = "https://github.com/telegramdesktop/tdesktop"
 page = requests.get(url).content
 soup = BeautifulSoup(page, "html.parser")
-links = soup.find_all("a")
-for lk in links:
-    if "tdesktop/releases/tag/v" in lk.get("href"):
-        print(lk.get("href").split("/v")[1])
-        break
+version = soup.find("span", {"title": "Label: Latest"}).find_previous_sibling()
+print(version.text.replace("v ", ""))
 
 EOF`
   wget https://updates.tdesktop.com/tlinux/tsetup.$tel_ver.tar.xz -P $HOME/Softwares/
