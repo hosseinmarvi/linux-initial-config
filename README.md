@@ -24,9 +24,9 @@ This command will also check for the latest version of Python. If there's a new 
 
 The command "cb" can be used as an alias of "xclip -selection c". Example: "cat <file_name> | cb" will copy the contents of the file_name to the clipboard.
 
-Terminal, Brave Browser, and PyCharm will be added to startup applications.
-
 The command "auto-dark" sets the theme to Light/Dark according to time, and schedules one further change of theme at the next sunset/sunrise.
+
+Update, Auto-Dark, Brave Browser, and PyCharm will be added to startup applications.
 
 Various keyboard shortcuts will be added for different commands.
 
