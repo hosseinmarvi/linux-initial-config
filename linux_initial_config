@@ -378,6 +378,9 @@ if os_name == "ubuntu":
     values = [{"name": "Terminal Dark",
                "command": "gnome-terminal --window-with-profile=Dark",
                "binding": "<Primary><Alt>y"},
+              {"name": "Update",
+               "command": "gnome-terminal -e update",
+               "binding": "<Primary><Alt>u"}, 
               {"name": "Light Theme",
                "command": "gsettings set org.gnome.desktop.interface "
                           "gtk-theme Yaru",
@@ -394,6 +397,9 @@ elif os_name == "pureos":
     values = [{"name": "Open Terminal",
                "command": "tilix",
                "binding": "<Primary><Alt>t"},
+              {"name": "Update",
+               "command": "tilix -e update",
+               "binding": "<Primary><Alt>u"}, 
               {"name": "Light Theme",
                "command": "gsettings set org.gnome.desktop.interface "
                           "gtk-theme 'Adwaita'",
