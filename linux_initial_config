@@ -1,11 +1,16 @@
 #!/bin/bash
 
-
 # Before running this file, please make sure to run an update and reboot.
 # To run this file, open Terminal/Tilix and run "chmod +x linux_initial_config" and then "./linux_initial_config"
 
-current_directory=`pwd`
-read -p "Please enter your email [Optional]: " user_email
+current_directory=$(pwd)
+read -r -p "Please enter your email [Optional]: " user_email
+
+echo "**********INSTALLING REQUIREMENTS**********"
+mkdir -p /home/"$USER"/.config/autostart
+sudo apt install -y at python3-pip openssl
+python3 -m pip install -U pip
+python3 -m pip install requests bs4 astral
 
 # install brave
 sudo apt install -y apt-transport-https curl gnupg
@@ -23,16 +28,19 @@ sudo sh -c 'echo "deb [arch=amd64] https://packagecloud.io/AtomEditor/atom/any/ 
 sudo apt update
 sudo apt install -y atom
 
-# install miniconda
-wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /home/$USER/Downloads/miniconda.sh
-sudo bash /home/$USER/Downloads/miniconda.sh -b -p /opt/miniconda -u
-rm /home/$USER/Downloads/miniconda.sh
-touch /home/$USER/.condarc
-echo "auto_activate_base: false" > /home/$USER/.condarc
+# install miniconda3
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /home/"$USER"/Downloads/miniconda.sh
+bash /home/"$USER"/Downloads/miniconda.sh -b -p /home/"$USER"/.miniconda3 -u
+rm /home/"$USER"/Downloads/miniconda.sh
+/home/"$USER"/.miniconda3/bin/conda init bash
+/home/"$USER"/.miniconda3/bin/conda init zsh
+touch /home/"$USER"/.condarc
+echo "auto_activate_base: false" > /home/"$USER"/.condarc
 
 # install snapd
 sudo apt install -y snapd
 sudo snap install core
+sudo snap refresh core
 
 # install pycharm
 sudo snap install pycharm-professional --classic
@@ -41,8 +49,8 @@ sudo snap install pycharm-professional --classic
 sudo apt install -y ssh tree xclip
 
 # customization
-os_name=`cat /etc/os-release | grep -oP "(?<=^ID=).*"`
-if [ ${os_name} = ubuntu ]
+os_name=$(grep -oP "(?<=^ID=).*" < /etc/os-release)
+if [ "${os_name}" = ubuntu ]
 then
   echo FIRST CONDITION
   # install git
@@ -51,8 +59,8 @@ then
   sudo apt install -y git
 
   # install anydesk
-  wget -qO - https://keys.anydesk.com/repos/DEB-GPG-KEY | apt-key add -
-  echo "deb http://deb.anydesk.com/ all main" > /etc/apt/sources.list.d/anydesk-stable.list
+  wget -qO - https://keys.anydesk.com/repos/DEB-GPG-KEY | sudo apt-key add -
+  echo "deb http://deb.anydesk.com/ all main" | sudo tee /etc/apt/sources.list.d/anydesk-stable.list
   sudo apt update
   sudo apt install -y anydesk
 
@@ -66,7 +74,7 @@ then
   sudo snap install telegram-desktop
 
   # Add Update to startup apps
-  cat << WRITE_UPDATE_AUTOSTART > /home/$USER/.config/autostart/update.desktop
+  cat << WRITE_UPDATE_AUTOSTART > /home/"$USER"/.config/autostart/update.desktop
 [Desktop Entry]
 Type=Application
 Name=Update
@@ -74,20 +82,14 @@ Exec=gnome-terminal -e "update"
 X-GNOME-Autostart-enabled=true
 WRITE_UPDATE_AUTOSTART
 
-elif [ ${os_name} = pureos ]
+elif [ "${os_name}" = pureos ]
 then
   echo SECOND CONDITION
   # install git
-  sudo apt install -y git-all
-  sudo git clone git://git.kernel.org/pub/scm/git/git.git /opt/git
-  cd /opt/git
-  sudo make
-  sudo make install
-  git version
-  cd $current_directory
+  sudo apt install -y git
 
   # Add Update to startup apps
-  cat << WRITE_UPDATE_AUTOSTART > /home/$USER/.config/autostart/update.desktop
+  cat << WRITE_UPDATE_AUTOSTART > /home/"$USER"/.config/autostart/update.desktop
 [Desktop Entry]
 Type=Application
 Name=Update
@@ -95,11 +97,6 @@ Exec=tilix -e "update"
 X-GNOME-Autostart-enabled=true
 WRITE_UPDATE_AUTOSTART
 fi
-
-echo **********INSTALLING REQUIREMENTS**********
-sudo apt install -y at python3-pip
-python3 -m pip install -U pip
-python3 -m pip install requests bs4 astral
 
 # update
 sudo sh -c 'cat << \WRITE_UPDATE > /usr/local/bin/update
@@ -122,15 +119,22 @@ import requests
 from bs4 import BeautifulSoup
 
 
+def verified(ver):
+    for c in ver:
+        if c not in "0123456789.":
+            return False
+    return True
+
+
 def system_version():
     default_directory = "/usr/bin/"
     directory = "/usr/local/bin/"
     versions = []
     for file in os.listdir(default_directory):
-        if file.startswith("python") and "-" not in file and file != "python" and file[-1].isdigit():
+        if file.startswith("python") and file != "python" and verified(file[6:]):
             versions.append(float(file.replace("python", "0")))
     for file in os.listdir(directory):
-        if file.startswith("python") and "-" not in file and file != "python" and file[-1].isdigit():
+        if file.startswith("python") and file != "python" and verified(file[6:]):
             versions.append(float(file.replace("python", "0")))
     if versions:
         result = max(float(sys.version[:3]), max(versions))
@@ -158,7 +162,7 @@ if __name__ == "__main__":
 
 GET_PYTHON_VERSION`
 
-if [ ${ver} = 0 ]
+if [ "${ver}" = 0 ]
 then
   echo Already up-to-date
 else
@@ -167,13 +171,13 @@ else
   libncursesw5-dev xz-utils tk-dev liblzma-dev
 
   echo **********DOWNLOADING**********
-  wget https://www.python.org/ftp/python/$ver/Python-$ver.tar.xz -P /home/$USER/Downloads/
+  wget https://www.python.org/ftp/python/"$ver"/Python-"$ver".tar.xz -P /home/"$USER"/Downloads/
 
   echo **********EXTRACTING**********
-  tar xvf /home/$USER/Downloads/Python-$ver.tar.xz -C /home/$USER/Downloads/
+  tar xvf /home/"$USER"/Downloads/Python-"$ver".tar.xz -C /home/"$USER"/Downloads/
 
   echo **********CONFIGURE**********
-  cd /home/$USER/Downloads/Python-$ver/
+  cd /home/"$USER"/Downloads/Python-"$ver"/ || exit
   ./configure --enable-optimizations --with-ensurepip=upgrade
 
   echo **********MAKE**********
@@ -183,20 +187,20 @@ else
   sudo make altinstall
 
   # echo **********TEST**********
-  ver_mm=${ver::3}
-  # python$ver_mm -m test
+  ver_mm="${ver::3}"
+  # python"$ver_mm" -m test
 
   echo **********UPGRADING PIP**********
-  python$ver_mm -m pip install -U pip
+  python"$ver_mm" -m pip install -U pip
 
   echo **********CREATE VIRTUAL ENVIRONMENT**********
-  python$ver_mm -m venv /home/$USER/envs/${ver//.}
+  python"$ver_mm" -m venv /home/"$USER"/envs/"${ver//.}"
   echo **********REMOVING DOWNLOADED FILES**********
-  cd $current_directory
-  rm /home/$USER/Downloads/Python-$ver.tar.xz
-  sudo rm -rf /home/$USER/Downloads/Python-$ver/
+  cd "$current_directory" || exit
+  rm /home/"$USER"/Downloads/Python-"$ver".tar.xz
+  sudo rm -rf /home/"$USER"/Downloads/Python-"$ver"/
 
-  python$ver_mm -V
+  python"$ver_mm" -V
 fi
 
 exit
@@ -207,15 +211,13 @@ WRITE_UPDATE'
 sudo chmod +x /usr/local/bin/update
 update
 
-
 # cb as clipboard
-cat << WRITE_ALIASES >> /home/$USER/.bash_aliases
+cat << WRITE_ALIASES >> /home/"$USER"/.bash_aliases
 alias cb="xclip -selection c"
 
 WRITE_ALIASES
-chmod +x /home/$USER/.bash_aliases
-source /home/$USER/.bashrc	# update bashrc
-
+chmod +x /home/"$USER"/.bash_aliases
+source /home/"$USER"/.bashrc	# update bashrc
 
 # Set Auto-Dark
 sudo sh -c 'cat << \WRITE_AUTO_DARK > /usr/local/bin/auto-dark
@@ -242,7 +244,8 @@ os_name = subprocess.getoutput("cat /etc/os-release | grep -oP \"(?<=^ID=).*\"")
 now = datetime.datetime.now().time().strftime("%H:%M")
 sunrise, sunset = sunrise_sunset()
 now_theme = "gsettings set org.gnome.desktop.interface gtk-theme "
-remove_at_jobs = "atrm $(atq | cut -f1)"
+remove_at_jobs = "for i in $(atq | cut -f 1); do atrm \"$i\"; done"
+
 day_theme = ""
 night_theme = ""
 if os_name == "ubuntu":
@@ -378,7 +381,7 @@ chmod +x shortcuts.py
 rm shortcuts.py
 
 # set startup apps
-cat << WRITE_BRAVE > /home/$USER/.config/autostart/brave.desktop
+cat << WRITE_BRAVE > /home/"$USER"/.config/autostart/brave.desktop
 [Desktop Entry]
 Type=Application
 Name=Brave Browser
@@ -386,7 +389,7 @@ Exec=brave-browser
 X-GNOME-Autostart-enabled=true
 WRITE_BRAVE
 
-cat << WRITE_PYCHARM > /home/$USER/.config/autostart/pycharm.desktop
+cat << WRITE_PYCHARM > /home/"$USER"/.config/autostart/pycharm.desktop
 [Desktop Entry]
 Type=Application
 Name=PyCharm Professional
@@ -394,7 +397,7 @@ Exec=pycharm-professional
 X-GNOME-Autostart-enabled=true
 WRITE_PYCHARM
 
-cat << WRITE_AUTODARK > /home/$USER/.config/autostart/autodark.desktop
+cat << WRITE_AUTODARK > /home/"$USER"/.config/autostart/autodark.desktop
 [Desktop Entry]
 Type=Application
 Name=Auto Dark-Mode
@@ -403,16 +406,21 @@ X-GNOME-Autostart-enabled=true
 WRITE_AUTODARK
 
 # change ownership if needed
-sudo chown -R $USER envs/
+sudo chown -R "$USER" envs/
+
+# git config
+git config --global user.name "$USER"@"$HOSTNAME"
+git config --global user.email "$user_email"
 
 # add ssh key
-mkdir -p /home/$USER/.ssh/
-touch /home/$USER/.ssh/authorized_keys
-ssh-keygen -t ed25519 -C $user_email -f /home/$USER/.ssh/id_ed25519 -N ""
-eval `ssh-agent`
-ssh-add /home/$USER/.ssh/id_ed25519
-cat /home/$USER/.ssh/id_ed25519.pub | xclip -selection c
+mkdir -p /home/"$USER"/.ssh/
+touch /home/"$USER"/.ssh/authorized_keys
+ssh-keygen -t ed25519 -C "$user_email" -f /home/"$USER"/.ssh/id_ed25519 -N ""
+eval "$(ssh-agent)"
+ssh-add /home/"$USER"/.ssh/id_ed25519
+xclip -selection c < /home/"$USER"/.ssh/id_ed25519.pub
 
+cd "$current_directory" || exit
 echo All Done!
 echo "The contents of the public key copied to the clipboard"
 echo "You can paste it to your GitHub account settings which will be opened for you"
