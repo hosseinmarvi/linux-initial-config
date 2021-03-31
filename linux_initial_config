@@ -23,27 +23,19 @@ sudo sh -c 'echo "deb [arch=amd64] https://packagecloud.io/AtomEditor/atom/any/ 
 sudo apt update
 sudo apt install -y atom
 
+# install miniconda
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /home/$USER/Downloads/miniconda.sh
+sudo bash /home/$USER/Downloads/miniconda.sh -b -p /opt/miniconda -u
+rm /home/$USER/Downloads/miniconda.sh
+touch /home/$USER/.condarc
+echo "auto_activate_base: false" > /home/$USER/.condarc
+
+# install snapd
+sudo apt install -y snapd
+sudo snap install core
+
 # install pycharm
-echo **********INSTALLING REQUIREMENTS**********
-sudo apt install -y at python3-pip
-python3 -m pip install -U pip
-python3 -m pip install requests bs4 astral
-pc_ver=`python3 - << EOF
-import requests
-from bs4 import BeautifulSoup
-
-
-url = "https://blog.jetbrains.com/pycharm/category/releases/"
-page = requests.get(url).text
-soup = BeautifulSoup(page, "html.parser")
-title = soup.find("div", {"class": "col"})
-print(title.h3.text.replace("PyCharm ", "").split()[0])
-
-EOF`
-wget https://download.jetbrains.com/python/pycharm-professional-$pc_ver.tar.gz -P $HOME/Softwares/
-mkdir $HOME/Softwares/pycharm-professional/
-tar xvf $HOME/Softwares/pycharm-professional-$pc_ver.tar.gz -C $HOME/Softwares/pycharm-professional --strip-components=1
-rm $HOME/Softwares/pycharm-professional-$pc_ver.tar.gz
+sudo snap install pycharm-professional --classic
 
 # install tools
 sudo apt install -y ssh tree xclip
@@ -64,78 +56,50 @@ then
   sudo apt update
   sudo apt install -y anydesk
 
+  # install vlc
+  sudo apt install -y vlc
+
+  # install grub-customizer
+  sudo apt install -y grub-customizer
+
   # install telegram
-  tel_ver=`python3 - << EOF
-import requests
-from bs4 import BeautifulSoup
+  sudo snap install telegram-desktop
 
-
-url = "https://github.com/telegramdesktop/tdesktop"
-page = requests.get(url).content
-soup = BeautifulSoup(page, "html.parser")
-version = soup.find("span", {"title": "Label: Latest"}).find_previous_sibling()
-print(version.text.replace("v ", ""))
-
-EOF`
-  wget https://updates.tdesktop.com/tlinux/tsetup.$tel_ver.tar.xz -P $HOME/Softwares/
-  tar xvf $HOME/Softwares/tsetup.$tel_ver.tar.xz -C $HOME/Softwares/
-  rm $HOME/Softwares/tsetup.$tel_ver.tar.xz
-  
   # Add Update to startup apps
-  cat << WRITE_UPDATE_AUTOSTART > $HOME/.config/autostart/update.desktop
+  cat << WRITE_UPDATE_AUTOSTART > /home/$USER/.config/autostart/update.desktop
 [Desktop Entry]
 Type=Application
-Name="Update"
+Name=Update
 Exec=gnome-terminal -e "update"
 X-GNOME-Autostart-enabled=true
 WRITE_UPDATE_AUTOSTART
-  
+
 elif [ ${os_name} = pureos ]
 then
   echo SECOND CONDITION
   # install git
-  git_ver=`python3 - << EOF
-import requests
-from bs4 import BeautifulSoup
-
-
-url = "https://git-scm.com/download/linux"
-page = requests.get(url).text
-soup = BeautifulSoup(page, "html.parser")
-paragraphs = soup.find_all("p")
-for p in paragraphs:
-    if "The latest version is" in p.text:
-        for link in p.find_all("a"):
-            if "tar.gz" in link.get("href"):
-                print(link.text)
-                break
-        break
-
-EOF`
-  wget https://www.kernel.org/pub/software/scm/git/git-$git_ver.tar.gz -P $HOME/Downloads/
-  sudo apt install -y git libz-dev libssl-dev dh-autoreconf libcurl4-gnutls-dev
-  tar xvf $HOME/Downloads/git-$git_ver.tar.gz -C $HOME/Downloads/
-  cd $HOME/Downloads/git-$git_ver/
-  make configure
-  ./configure --prefix=/usr
-  make all doc info
+  sudo apt install -y git-all
+  sudo git clone git://git.kernel.org/pub/scm/git/git.git /opt/git
+  cd /opt/git
+  sudo make
   sudo make install
-  cd $HOME
-  git clone git://git.kernel.org/pub/scm/git/git.git $HOME/Softwares/git
-  rm -rf $HOME/Downloads/git-$git_ver/
-  rm $HOME/Downloads/git-$git_ver.tar.gz
+  git version
   cd $current_directory
-  git --version
-  
+
   # Add Update to startup apps
-  cat << WRITE_UPDATE_AUTOSTART > $HOME/.config/autostart/update.desktop
+  cat << WRITE_UPDATE_AUTOSTART > /home/$USER/.config/autostart/update.desktop
 [Desktop Entry]
 Type=Application
-Name="Update"
+Name=Update
 Exec=tilix -e "update"
 X-GNOME-Autostart-enabled=true
 WRITE_UPDATE_AUTOSTART
 fi
+
+echo **********INSTALLING REQUIREMENTS**********
+sudo apt install -y at python3-pip
+python3 -m pip install -U pip
+python3 -m pip install requests bs4 astral
 
 # update
 sudo sh -c 'cat << \WRITE_UPDATE > /usr/local/bin/update
@@ -210,7 +174,7 @@ else
 
   echo **********CONFIGURE**********
   cd /home/$USER/Downloads/Python-$ver/
-  ./configure --enable-optimizations --with-ensurepip=install
+  ./configure --enable-optimizations --with-ensurepip=upgrade
 
   echo **********MAKE**********
   make -j 8
@@ -226,7 +190,7 @@ else
   python$ver_mm -m pip install -U pip
 
   echo **********CREATE VIRTUAL ENVIRONMENT**********
-  python$ver_mm -m venv /home/$USER/qenv/${ver//.}
+  python$ver_mm -m venv /home/$USER/envs/${ver//.}
   echo **********REMOVING DOWNLOADED FILES**********
   cd $current_directory
   rm /home/$USER/Downloads/Python-$ver.tar.xz
@@ -245,12 +209,12 @@ update
 
 
 # cb as clipboard
-cat << WRITE_ALIASES >> $HOME/.bash_aliases
+cat << WRITE_ALIASES >> /home/$USER/.bash_aliases
 alias cb="xclip -selection c"
 
 WRITE_ALIASES
-chmod +x $HOME/.bash_aliases
-source $HOME/.bashrc	# update bashrc
+chmod +x /home/$USER/.bash_aliases
+source /home/$USER/.bashrc	# update bashrc
 
 
 # Set Auto-Dark
@@ -313,7 +277,6 @@ sudo chmod +x /usr/local/bin/auto-dark
 cat << WRITE_SHORTCUTS > shortcuts.py
 #!/usr/bin/env python3
 import subprocess
-from pathlib import Path
 
 
 def modify_default_shortcuts(os_):
@@ -368,19 +331,15 @@ add_custom_shortcut(os_name,
                     binding="<Primary><Alt>a")
 add_custom_shortcut(os_name,
                     name="Open PyCharm",
-                    command="charm",
+                    command="pycharm-professional",
                     binding="<Primary><Alt>p")
 
-home = str(Path.home())
 values = []
 
 if os_name == "ubuntu":
-    values = [{"name": "Terminal Dark",
-               "command": "gnome-terminal --window-with-profile=Dark",
-               "binding": "<Primary><Alt>y"},
-              {"name": "Update",
+    values = [{"name": "Update",
                "command": "gnome-terminal -e update",
-               "binding": "<Primary><Alt>u"}, 
+               "binding": "<Primary><Alt>u"},
               {"name": "Light Theme",
                "command": "gsettings set org.gnome.desktop.interface "
                           "gtk-theme Yaru",
@@ -390,7 +349,7 @@ if os_name == "ubuntu":
                           "gtk-theme Yaru-dark",
                "binding": "<Primary><Alt>2"},
               {"name": "Open Telegram",
-               "command": f"{home}/Softwares/Telegram/Telegram",
+               "command": "telegram-desktop",
                "binding": "<Primary><Alt>j"}]
 
 elif os_name == "pureos":
@@ -399,7 +358,7 @@ elif os_name == "pureos":
                "binding": "<Primary><Alt>t"},
               {"name": "Update",
                "command": "tilix -e update",
-               "binding": "<Primary><Alt>u"}, 
+               "binding": "<Primary><Alt>u"},
               {"name": "Light Theme",
                "command": "gsettings set org.gnome.desktop.interface "
                           "gtk-theme 'Adwaita'",
@@ -419,40 +378,40 @@ chmod +x shortcuts.py
 rm shortcuts.py
 
 # set startup apps
-cat << WRITE_BRAVE > $HOME/.config/autostart/brave.desktop
+cat << WRITE_BRAVE > /home/$USER/.config/autostart/brave.desktop
 [Desktop Entry]
 Type=Application
-Name="Brave Browser"
+Name=Brave Browser
 Exec=brave-browser
 X-GNOME-Autostart-enabled=true
 WRITE_BRAVE
 
-cat << WRITE_PYCHARM > $HOME/.config/autostart/pycharm.desktop
+cat << WRITE_PYCHARM > /home/$USER/.config/autostart/pycharm.desktop
 [Desktop Entry]
 Type=Application
-Name="PyCharm Professional"
-Exec=charm
+Name=PyCharm Professional
+Exec=pycharm-professional
 X-GNOME-Autostart-enabled=true
 WRITE_PYCHARM
 
-cat << WRITE_AUTODARK > $HOME/.config/autostart/autodark.desktop
+cat << WRITE_AUTODARK > /home/$USER/.config/autostart/autodark.desktop
 [Desktop Entry]
 Type=Application
-Name="Auto Dark-Mode"
+Name=Auto Dark-Mode
 Exec=auto-dark
 X-GNOME-Autostart-enabled=true
 WRITE_AUTODARK
 
 # change ownership if needed
-sudo chown -R $USER qenv/ Softwares/
+sudo chown -R $USER envs/
 
 # add ssh key
-mkdir -p $HOME/.ssh/
-touch $HOME/.ssh/authorized_keys
-ssh-keygen -t ed25519 -C $user_email -f $HOME/.ssh/id_ed25519 -N ""
+mkdir -p /home/$USER/.ssh/
+touch /home/$USER/.ssh/authorized_keys
+ssh-keygen -t ed25519 -C $user_email -f /home/$USER/.ssh/id_ed25519 -N ""
 eval `ssh-agent`
-ssh-add $HOME/.ssh/id_ed25519
-cat $HOME/.ssh/id_ed25519.pub | xclip -selection c
+ssh-add /home/$USER/.ssh/id_ed25519
+cat /home/$USER/.ssh/id_ed25519.pub | xclip -selection c
 
 echo All Done!
 echo "The contents of the public key copied to the clipboard"
