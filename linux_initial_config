@@ -8,7 +8,7 @@ read -r -p "Please enter your email [Optional]: " user_email
 
 echo "**********INSTALLING REQUIREMENTS**********"
 mkdir -p /home/"$USER"/.config/autostart
-sudo apt install -y at python3-pip openssl
+sudo apt install -y at python3-pip openssl gnome-tweaks
 python3 -m pip install -U pip
 python3 -m pip install requests bs4 astral
 
@@ -167,7 +167,7 @@ then
   echo Already up-to-date
 else
   sudo apt install -y make build-essential libssl-dev zlib1g-dev libbz2-dev \
-  libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev \
+  breadline-dev libsqlite3-dev wget curl llvm libncurses5-dev \
   libncursesw5-dev xz-utils tk-dev liblzma-dev
 
   echo **********DOWNLOADING**********
