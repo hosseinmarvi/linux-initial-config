@@ -9,6 +9,7 @@ The following softwares will be downloaded and installed (along with the require
 - ssh
 - tree
 - xclip
+- aws-cli 
 - Anydesk (On Ubuntu)
 - Telegram Desktop (On Ubuntu)
 

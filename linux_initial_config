@@ -8,7 +8,7 @@ read -r -p "Please enter your email [Optional]: " user_email
 
 echo "**********INSTALLING REQUIREMENTS**********"
 mkdir -p /home/"$USER"/.config/autostart
-sudo apt install -y at python3-pip openssl gnome-tweaks
+sudo apt install -y at python3-pip openssl gnome-tweaks unzip
 python3 -m pip install -U pip
 python3 -m pip install requests bs4 astral
 
@@ -36,6 +36,13 @@ rm /home/"$USER"/Downloads/miniconda.sh
 /home/"$USER"/.miniconda3/bin/conda init zsh
 touch /home/"$USER"/.condarc
 echo "auto_activate_base: false" > /home/"$USER"/.condarc
+
+# install aws-cli
+wget https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -O /home/"$USER"/Downloads/awscli.zip
+unzip /home/"$USER"/Downloads/awscli.zip -d /home/"$USER"/Downloads/
+sudo /home/"$USER"/Downloads/aws/install
+rm -rf /home/"$USER"/Downloads/aws
+rm /home/"$USER"/Downloads/awscli.zip
 
 # install snapd
 sudo apt install -y snapd
